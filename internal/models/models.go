@@ -1,4 +1,5 @@
-package repository
+// Package models
+package models
 
 import (
 	"time"
