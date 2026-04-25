@@ -19,11 +19,6 @@ func main() {
 	}
 	defer func() { _ = db.Close() }()
 
-	err = shared.InitTables(db)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	config := shared.NewConfig()
 	appMod := applications.NewModule(db, config)
 
