@@ -1,23 +1,29 @@
-package repository
+package applications
 
 import (
+	"database/sql"
 	"log"
 	"time"
-
-	"github.com/alehbelskidev/job_appl_track/internal/dto"
-	"github.com/alehbelskidev/job_appl_track/internal/models"
 )
 
-func (s *Repo) CreateJobApplication(a *models.JobApplication) error {
-	_, err := s.db.Exec(
+type repository struct {
+	db *sql.DB
+}
+
+func newRepository(db *sql.DB) *repository {
+	return &repository{db: db}
+}
+
+func (r *repository) createJobApplication(a *JobApplication) error {
+	_, err := r.db.Exec(
 		"INSERT INTO job_applications(company, role, date_applied, status) VALUES(?, ?, ?, ?)",
 		a.Company, a.Role, a.DateApplied, a.Status,
 	)
 	return err
 }
 
-func (s *Repo) GetJobApplications() ([]*models.JobApplication, error) {
-	rows, err := s.db.Query("SELECT id, company, role, date_applied, date_updated, status FROM job_applications")
+func (r *repository) getJobApplications() ([]*JobApplication, error) {
+	rows, err := r.db.Query("SELECT id, company, role, date_applied, date_updated, status FROM job_applications")
 	if err != nil {
 		return nil, err
 	}
@@ -28,10 +34,10 @@ func (s *Repo) GetJobApplications() ([]*models.JobApplication, error) {
 		}
 	}()
 
-	apps := make([]*models.JobApplication, 0)
+	apps := make([]*JobApplication, 0)
 
 	for rows.Next() {
-		app := &models.JobApplication{}
+		app := &JobApplication{}
 		err := rows.Scan(
 			&app.ID,
 			&app.Company,
@@ -53,7 +59,7 @@ func (s *Repo) GetJobApplications() ([]*models.JobApplication, error) {
 	return apps, nil
 }
 
-func (s *Repo) UpdateApplication(id int, payload *dto.UpdateApplicationDto) error {
+func (r *repository) updateApplication(id int, payload *UpdateApplicationDto) error {
 	query := "UPDATE job_applications SET date_updated = ?"
 	args := []any{time.Now()}
 
@@ -73,6 +79,6 @@ func (s *Repo) UpdateApplication(id int, payload *dto.UpdateApplicationDto) erro
 	query += " WHERE id = ?"
 	args = append(args, id)
 
-	_, err := s.db.Exec(query, args...)
+	_, err := r.db.Exec(query, args...)
 	return err
 }

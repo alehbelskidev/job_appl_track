@@ -1,5 +1,4 @@
-// Package models
-package models
+package applications
 
 import (
 	"time"
@@ -22,4 +21,10 @@ type JobApplication struct {
 	DateApplied time.Time            `json:"date_applied"`
 	DateUpdated time.Time            `json:"date_updated"`
 	Status      JobApplicationStatus `json:"status"`
+}
+
+type UpdateApplicationDto struct {
+	Company *string               `json:"company"`
+	Role    *string               `json:"role"`
+	Status  *JobApplicationStatus `json:"status"`
 }

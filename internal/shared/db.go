@@ -1,11 +1,12 @@
-package repository
+package shared
 
 import (
+	"database/sql"
 	"log"
 )
 
-func (s *Repo) InitTables() error {
-	tx, err := s.db.Begin()
+func InitTables(db *sql.DB) error {
+	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
@@ -18,7 +19,7 @@ func (s *Repo) InitTables() error {
 	createUsersTableStmt := `
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER NOT NULL PRIMARY KEY,
-		username TEXT NOT NULL,
+		email TEXT NOT NULL,
 		password TEXT NOT NULL
 	)
 	`
@@ -39,6 +40,17 @@ func (s *Repo) InitTables() error {
 	);
 	`
 	_, err = tx.Exec(createAppsTableStmt)
+	if err != nil {
+		return err
+	}
+
+	createRefreshTableStmt := `
+	CREATE TABLE IF NOT EXISTS refresh_tokens (
+		id INTEGER NOT NULL PRIMARY KEY,
+		token TEXT NOT NULL,
+	)
+	`
+	_, err = tx.Exec(createRefreshTableStmt)
 	if err != nil {
 		return err
 	}

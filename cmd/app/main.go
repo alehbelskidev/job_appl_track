@@ -1,29 +1,41 @@
 package main
 
 import (
+	"database/sql"
 	"log"
+	"net/http"
 
-	"github.com/alehbelskidev/job_appl_track/internal/repository"
-	"github.com/alehbelskidev/job_appl_track/internal/router"
+	"github.com/alehbelskidev/job_appl_track/internal/applications"
+	"github.com/alehbelskidev/job_appl_track/internal/shared"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	repo, err := repository.NewRepo()
+	db, err := sql.Open("sqlite3", "./local.db")
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = repo.InitTables()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-		if err := repo.Close(); err != nil {
-			log.Printf("failed to close db: %v", err)
-		}
-	}()
+	defer func() { _ = db.Close() }()
 
-	internalRouter := router.NewRouter(repo)
-	if err := internalRouter.Listen(); err != nil {
+	err = shared.InitTables(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	config := shared.NewConfig()
+	appMod := applications.NewModule(db, config)
+
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+
+	r.Route("/api", func(r chi.Router) {
+		appMod.Mount(r)
+	})
+
+	err = http.ListenAndServe(":3001", r)
+	if err != nil {
 		log.Fatal(err)
 	}
 }

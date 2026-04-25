@@ -1,1 +1,3 @@
 local.db
+.env
+.DS_STORE
