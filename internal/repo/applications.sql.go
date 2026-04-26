@@ -15,8 +15,8 @@ import (
 
 const createJobApplication = `-- name: CreateJobApplication :one
 INSERT INTO job_applications(
-  company, role, date_applied, status
-) VALUES($1, $2, $3, $4)
+  company, role, date_applied, status, owner_id
+) VALUES($1, $2, $3, $4, $5)
 RETURNING id, company, role, date_applied, date_updated, status, owner_id
 `
 
@@ -25,6 +25,7 @@ type CreateJobApplicationParams struct {
 	Role        string
 	DateApplied time.Time
 	Status      int32
+	OwnerID     uuid.UUID
 }
 
 func (q *Queries) CreateJobApplication(ctx context.Context, arg CreateJobApplicationParams) (JobApplication, error) {
@@ -33,6 +34,7 @@ func (q *Queries) CreateJobApplication(ctx context.Context, arg CreateJobApplica
 		arg.Role,
 		arg.DateApplied,
 		arg.Status,
+		arg.OwnerID,
 	)
 	var i JobApplication
 	err := row.Scan(
@@ -50,6 +52,7 @@ func (q *Queries) CreateJobApplication(ctx context.Context, arg CreateJobApplica
 const getJobApplications = `-- name: GetJobApplications :many
 SELECT id, company, role, date_applied, date_updated, status
 FROM job_applications
+WHERE owner_id=$1
 `
 
 type GetJobApplicationsRow struct {
@@ -61,8 +64,8 @@ type GetJobApplicationsRow struct {
 	Status      int32
 }
 
-func (q *Queries) GetJobApplications(ctx context.Context) ([]GetJobApplicationsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getJobApplications)
+func (q *Queries) GetJobApplications(ctx context.Context, ownerID uuid.UUID) ([]GetJobApplicationsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getJobApplications, ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -94,16 +97,17 @@ func (q *Queries) GetJobApplications(ctx context.Context) ([]GetJobApplicationsR
 const updateJobApplication = `-- name: UpdateJobApplication :one
 UPDATE job_applications
 SET
-  company = $2,
-  role = $3,
-  status = $4,
+  company = $3,
+  role = $4,
+  status = $5,
   date_updated = NOW()
-WHERE id=$1
+WHERE id=$1 AND owner_id=$2
 RETURNING id, company, role, date_applied, date_updated, status, owner_id
 `
 
 type UpdateJobApplicationParams struct {
 	ID      uuid.UUID
+	OwnerID uuid.UUID
 	Company string
 	Role    string
 	Status  int32
@@ -112,6 +116,7 @@ type UpdateJobApplicationParams struct {
 func (q *Queries) UpdateJobApplication(ctx context.Context, arg UpdateJobApplicationParams) (JobApplication, error) {
 	row := q.db.QueryRowContext(ctx, updateJobApplication,
 		arg.ID,
+		arg.OwnerID,
 		arg.Company,
 		arg.Role,
 		arg.Status,

@@ -1,8 +1,7 @@
 package auth
 
 import (
-	"database/sql"
-
+	"github.com/alehbelskidev/job_appl_track/internal/repo"
 	"github.com/alehbelskidev/job_appl_track/internal/shared"
 	"github.com/go-chi/chi/v5"
 )
@@ -10,16 +9,15 @@ import (
 type Module struct {
 	handler *handler
 	service *service
-	repo    *repository
+	q       *repo.Queries
 	config  *shared.Config
 }
 
-func NewModule(db *sql.DB, config *shared.Config) *Module {
-	r := newRepository(db)
-	s := newService(r, config)
+func NewModule(q *repo.Queries, config *shared.Config) *Module {
+	s := newService(q, config)
 	h := newHandler(s)
 
-	return &Module{repo: r, handler: h, service: s, config: config}
+	return &Module{handler: h, service: s, config: config}
 }
 
 func (m *Module) Mount(r chi.Router) {

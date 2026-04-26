@@ -1,24 +1,26 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"time"
 
+	"github.com/alehbelskidev/job_appl_track/internal/repo"
 	"github.com/alehbelskidev/job_appl_track/internal/shared"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type service struct {
-	repo   *repository
 	config *shared.Config
+	q      *repo.Queries
 }
 
-func newService(repo *repository, config *shared.Config) *service {
-	return &service{repo: repo, config: config}
+func newService(q *repo.Queries, config *shared.Config) *service {
+	return &service{config: config, q: q}
 }
 
-func (s *service) register(dto *RegisterDTO) (*TokensDTO, error) {
+func (s *service) register(ctx context.Context, dto *RegisterDTO) (*TokensDTO, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
 
 	if err != nil {
@@ -27,12 +29,12 @@ func (s *service) register(dto *RegisterDTO) (*TokensDTO, error) {
 
 	dto.Password = string(hash)
 
-	err = s.repo.createUser(dto)
+	user, err := s.q.CreateUser(ctx, repo.CreateUserParams{Email: dto.Email, Password: dto.Password})
 	if err != nil {
 		return nil, err
 	}
 
-	tokens, err := s.createTokens(dto.Email)
+	tokens, err := s.createTokens(ctx, user.ID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +42,8 @@ func (s *service) register(dto *RegisterDTO) (*TokensDTO, error) {
 	return tokens, nil
 }
 
-func (s *service) login(dto *LoginDTO) (*TokensDTO, error) {
-	user, err := s.repo.getUser(dto.Email)
+func (s *service) login(ctx context.Context, dto *LoginDTO) (*TokensDTO, error) {
+	user, err := s.q.GetUserByEmail(ctx, dto.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +53,7 @@ func (s *service) login(dto *LoginDTO) (*TokensDTO, error) {
 		return nil, err
 	}
 
-	tokens, err := s.createTokens(dto.Email)
+	tokens, err := s.createTokens(ctx, user.ID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -59,30 +61,36 @@ func (s *service) login(dto *LoginDTO) (*TokensDTO, error) {
 	return tokens, nil
 }
 
-func (s *service) refreshToken(token string) (*TokensDTO, error) {
+func (s *service) refreshToken(ctx context.Context, token string) (*TokensDTO, error) {
 	parsed, err := jwt.Parse(token, func(t *jwt.Token) (any, error) {
 		return s.config.JwtSecret, nil
 	})
 	if err != nil || !parsed.Valid {
 		return nil, errors.New("invalid token")
 	}
+	_, err = s.q.GetRefreshToken(ctx, token)
+	if err != nil {
+		return nil, errors.New("invalid token")
+	}
 
 	claims := parsed.Claims.(jwt.MapClaims)
-	email := claims["email"].(string)
+	userId := claims["user_id"].(string)
 
-	if err := s.repo.deleteRefreshToken(token); err != nil {
+	if err := s.q.DeleteRefreshToken(ctx, token); err != nil {
 		return nil, err
 	}
 
-	return s.createTokens(email)
+	return s.createTokens(ctx, userId)
 }
 
-func (s *service) createTokens(email string) (*TokensDTO, error) {
+func (s *service) createTokens(ctx context.Context, userId string) (*TokensDTO, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email": email,
-		"exp":   time.Now().Add(5 * time.Minute).Unix(),
+		"user_id": userId,
+		"exp":     time.Now().Add(5 * time.Minute).Unix(),
 	})
-	refreshToken := jwt.New(jwt.SigningMethodHS256)
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": userId,
+	})
 
 	accessTokenStr, err := accessToken.SignedString(s.config.JwtSecret)
 	if err != nil {
@@ -94,7 +102,7 @@ func (s *service) createTokens(email string) (*TokensDTO, error) {
 		return nil, err
 	}
 
-	err = s.repo.createRefreshToken(refreshTokenStr)
+	err = s.q.AddRefreshToken(ctx, refreshTokenStr)
 	if err != nil {
 		return nil, err
 	}

@@ -23,7 +23,7 @@ func (h *handler) registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokens, err := h.s.register(dto)
+	tokens, err := h.s.register(r.Context(), dto)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Print(err)
@@ -43,7 +43,7 @@ func (h *handler) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokens, err := h.s.login(dto)
+	tokens, err := h.s.login(r.Context(), dto)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Print(err)
@@ -55,14 +55,14 @@ func (h *handler) loginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
-	var dto *TokensDTO
+	var dto *RefreshTokenDto
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		log.Print(err)
 		return
 	}
 
-	tokens, err := h.s.refreshToken(dto.RefreshToken)
+	tokens, err := h.s.refreshToken(r.Context(), dto.RefreshToken)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Print(err)

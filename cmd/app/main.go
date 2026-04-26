@@ -6,26 +6,34 @@ import (
 	"net/http"
 
 	"github.com/alehbelskidev/job_appl_track/internal/applications"
+	"github.com/alehbelskidev/job_appl_track/internal/auth"
+	"github.com/alehbelskidev/job_appl_track/internal/repo"
 	"github.com/alehbelskidev/job_appl_track/internal/shared"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
-	db, err := sql.Open("sqlite3", "./local.db")
+	config := shared.NewConfig()
+	db, err := sql.Open("pgx", config.DatabaseUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer func() { _ = db.Close() }()
 
-	config := shared.NewConfig()
-	appMod := applications.NewModule(db, config)
+	q := repo.New(db)
+	appMod := applications.NewModule(q, config)
+	authMod := auth.NewModule(q, config)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
+	r.Route("/auth", func(r chi.Router) {
+		authMod.Mount(r)
+	})
 	r.Route("/api", func(r chi.Router) {
+		r.Use(shared.AuthMiddleware(config.JwtSecret))
 		appMod.Mount(r)
 	})
 

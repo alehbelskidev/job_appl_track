@@ -8,7 +8,8 @@ import (
 )
 
 type Config struct {
-	JwtSecret []byte
+	JwtSecret   []byte
+	DatabaseUrl string
 }
 
 func NewConfig() *Config {
@@ -17,6 +18,7 @@ func NewConfig() *Config {
 	}
 
 	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
+	databaseUrl := os.Getenv("DATABASE_URL")
 
-	return &Config{JwtSecret: jwtSecret}
+	return &Config{JwtSecret: jwtSecret, DatabaseUrl: databaseUrl}
 }

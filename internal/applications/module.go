@@ -1,23 +1,21 @@
 package applications
 
 import (
-	"database/sql"
-
+	"github.com/alehbelskidev/job_appl_track/internal/repo"
 	"github.com/alehbelskidev/job_appl_track/internal/shared"
 	"github.com/go-chi/chi/v5"
 )
 
 type Module struct {
 	handler *handler
-	repo    *repository
+	q       *repo.Queries
 	config  *shared.Config
 }
 
-func NewModule(db *sql.DB, config *shared.Config) *Module {
-	r := newRepository(db)
-	h := newHandler(r)
+func NewModule(q *repo.Queries, config *shared.Config) *Module {
+	h := newHandler(q)
 
-	return &Module{repo: r, handler: h, config: config}
+	return &Module{q: q, handler: h, config: config}
 }
 
 func (m *Module) Mount(r chi.Router) {
