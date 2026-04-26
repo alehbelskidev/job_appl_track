@@ -8,11 +8,11 @@ import (
 
 type Module struct {
 	handler *handler
-	q       *repo.Queries
+	q       repo.Querier
 	config  *shared.Config
 }
 
-func NewModule(q *repo.Queries, config *shared.Config) *Module {
+func NewModule(q repo.Querier, config *shared.Config) *Module {
 	h := newHandler(q)
 
 	return &Module{q: q, handler: h, config: config}

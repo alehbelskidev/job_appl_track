@@ -9,11 +9,11 @@ import (
 type Module struct {
 	handler *handler
 	service *service
-	q       *repo.Queries
 	config  *shared.Config
+	q       repo.Querier
 }
 
-func NewModule(q *repo.Queries, config *shared.Config) *Module {
+func NewModule(q repo.Querier, config *shared.Config) *Module {
 	s := newService(q, config)
 	h := newHandler(s)
 

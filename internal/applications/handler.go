@@ -15,10 +15,10 @@ import (
 )
 
 type handler struct {
-	q *repo.Queries
+	q repo.Querier
 }
 
-func newHandler(q *repo.Queries) *handler {
+func newHandler(q repo.Querier) *handler {
 	return &handler{q: q}
 }
 

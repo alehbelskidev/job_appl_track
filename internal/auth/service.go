@@ -13,10 +13,10 @@ import (
 
 type service struct {
 	config *shared.Config
-	q      *repo.Queries
+	q      repo.Querier
 }
 
-func newService(q *repo.Queries, config *shared.Config) *service {
+func newService(q repo.Querier, config *shared.Config) *service {
 	return &service{config: config, q: q}
 }
 

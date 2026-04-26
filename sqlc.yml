@@ -7,3 +7,4 @@ sql:
       go:
         package: "repo"
         out: "internal/repo"
+        emit_interface: true
