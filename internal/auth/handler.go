@@ -16,7 +16,7 @@ func newHandler(s *service) *handler {
 	return &handler{s: s}
 }
 
-type UserResponseDto struct {
+type userResponseDto struct {
 	Email  string    `json:"email"`
 	Tokens TokensDTO `json:"tokens"`
 }
@@ -37,7 +37,7 @@ func (h *handler) registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := UserResponseDto{
+	response := userResponseDto{
 		Email:  dto.Email,
 		Tokens: *tokens,
 	}
@@ -66,7 +66,7 @@ func (h *handler) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := UserResponseDto{
+	response := userResponseDto{
 		Email:  dto.Email,
 		Tokens: *tokens,
 	}
