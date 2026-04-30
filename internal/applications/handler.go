@@ -35,6 +35,10 @@ func (h *handler) getUserIDFromContext(ctx context.Context) (*uuid.UUID, error) 
 	return &ownerID, nil
 }
 
+type createApplicationResponseDto struct {
+	Data repo.JobApplication `json:"data"`
+}
+
 func (h *handler) createApplication(w http.ResponseWriter, r *http.Request) {
 	ownerID, err := h.getUserIDFromContext(r.Context())
 	if err != nil {
@@ -62,8 +66,10 @@ func (h *handler) createApplication(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 		return
 	}
+
+	response := createApplicationResponseDto{Data: app}
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(app)
+	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Print(err)
