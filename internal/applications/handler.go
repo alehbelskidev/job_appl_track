@@ -71,6 +71,10 @@ func (h *handler) createApplication(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type getJobApplicationsResponseDto struct {
+	Data []repo.GetJobApplicationsRow `json:"data"`
+}
+
 func (h *handler) getApplications(w http.ResponseWriter, r *http.Request) {
 	ownerID, err := h.getUserIDFromContext(r.Context())
 	if err != nil {
@@ -85,8 +89,14 @@ func (h *handler) getApplications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var response getJobApplicationsResponseDto
+	if apps == nil {
+		response.Data = make([]repo.GetJobApplicationsRow, 0)
+	} else {
+		response.Data = apps
+	}
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(apps)
+	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Print(err)
