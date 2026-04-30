@@ -17,15 +17,15 @@ const createJobApplication = `-- name: CreateJobApplication :one
 INSERT INTO job_applications(
   company, role, date_applied, status, owner_id
 ) VALUES($1, $2, $3, $4, $5)
-RETURNING id, company, role, date_applied, date_updated, status, owner_id
+RETURNING id, company, role, date_applied, date_updated, status, owner_id, description, url, notes
 `
 
 type CreateJobApplicationParams struct {
-	Company     string
-	Role        string
-	DateApplied time.Time
-	Status      int32
-	OwnerID     uuid.UUID
+	Company     string    `json:"company"`
+	Role        string    `json:"role"`
+	DateApplied time.Time `json:"date_applied"`
+	Status      int32     `json:"status"`
+	OwnerID     uuid.UUID `json:"owner_id"`
 }
 
 func (q *Queries) CreateJobApplication(ctx context.Context, arg CreateJobApplicationParams) (JobApplication, error) {
@@ -45,6 +45,9 @@ func (q *Queries) CreateJobApplication(ctx context.Context, arg CreateJobApplica
 		&i.DateUpdated,
 		&i.Status,
 		&i.OwnerID,
+		&i.Description,
+		&i.Url,
+		&i.Notes,
 	)
 	return i, err
 }
@@ -56,12 +59,12 @@ WHERE owner_id=$1
 `
 
 type GetJobApplicationsRow struct {
-	ID          uuid.UUID
-	Company     string
-	Role        string
-	DateApplied time.Time
-	DateUpdated sql.NullTime
-	Status      int32
+	ID          uuid.UUID    `json:"id"`
+	Company     string       `json:"company"`
+	Role        string       `json:"role"`
+	DateApplied time.Time    `json:"date_applied"`
+	DateUpdated sql.NullTime `json:"date_updated"`
+	Status      int32        `json:"status"`
 }
 
 func (q *Queries) GetJobApplications(ctx context.Context, ownerID uuid.UUID) ([]GetJobApplicationsRow, error) {
@@ -102,15 +105,15 @@ SET
   status = $5,
   date_updated = NOW()
 WHERE id=$1 AND owner_id=$2
-RETURNING id, company, role, date_applied, date_updated, status, owner_id
+RETURNING id, company, role, date_applied, date_updated, status, owner_id, description, url, notes
 `
 
 type UpdateJobApplicationParams struct {
-	ID      uuid.UUID
-	OwnerID uuid.UUID
-	Company string
-	Role    string
-	Status  int32
+	ID      uuid.UUID `json:"id"`
+	OwnerID uuid.UUID `json:"owner_id"`
+	Company string    `json:"company"`
+	Role    string    `json:"role"`
+	Status  int32     `json:"status"`
 }
 
 func (q *Queries) UpdateJobApplication(ctx context.Context, arg UpdateJobApplicationParams) (JobApplication, error) {
@@ -130,6 +133,9 @@ func (q *Queries) UpdateJobApplication(ctx context.Context, arg UpdateJobApplica
 		&i.DateUpdated,
 		&i.Status,
 		&i.OwnerID,
+		&i.Description,
+		&i.Url,
+		&i.Notes,
 	)
 	return i, err
 }

@@ -18,7 +18,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./sql/schema.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./sql/migrations/000001_initdb.sql:/docker-entrypoint-initdb.d/init.sql
 
 volumes:
   pgdata:

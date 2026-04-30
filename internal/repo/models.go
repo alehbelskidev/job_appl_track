@@ -12,22 +12,25 @@ import (
 )
 
 type JobApplication struct {
-	ID          uuid.UUID
-	Company     string
-	Role        string
-	DateApplied time.Time
-	DateUpdated sql.NullTime
-	Status      int32
-	OwnerID     uuid.UUID
+	ID          uuid.UUID      `json:"id"`
+	Company     string         `json:"company"`
+	Role        string         `json:"role"`
+	DateApplied time.Time      `json:"date_applied"`
+	DateUpdated sql.NullTime   `json:"date_updated"`
+	Status      int32          `json:"status"`
+	OwnerID     uuid.UUID      `json:"owner_id"`
+	Description sql.NullString `json:"description"`
+	Url         sql.NullString `json:"url"`
+	Notes       sql.NullString `json:"notes"`
 }
 
 type RefreshToken struct {
-	ID    uuid.UUID
-	Token string
+	ID    uuid.UUID `json:"id"`
+	Token string    `json:"token"`
 }
 
 type User struct {
-	ID       uuid.UUID
-	Email    string
-	Password string
+	ID       uuid.UUID `json:"id"`
+	Email    string    `json:"email"`
+	Password string    `json:"password"`
 }
