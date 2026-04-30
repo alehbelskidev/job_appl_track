@@ -8,6 +8,7 @@ import (
 	"github.com/alehbelskidev/job_appl_track/internal/repo"
 	"github.com/alehbelskidev/job_appl_track/internal/shared"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -90,6 +91,8 @@ func (s *service) createTokens(ctx context.Context, userId string) (*TokensDTO, 
 	})
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userId,
+		"exp":     time.Now().Add(7 * 24 * time.Hour).Unix(),
+		"jti":     uuid.New().String(),
 	})
 
 	accessTokenStr, err := accessToken.SignedString(s.config.JwtSecret)

@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 )
@@ -12,6 +14,11 @@ type handler struct {
 
 func newHandler(s *service) *handler {
 	return &handler{s: s}
+}
+
+type UserResponseDto struct {
+	Email  string    `json:"email"`
+	Tokens TokensDTO `json:"tokens"`
 }
 
 func (h *handler) registerUser(w http.ResponseWriter, r *http.Request) {
@@ -30,8 +37,13 @@ func (h *handler) registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response := UserResponseDto{
+		Email:  dto.Email,
+		Tokens: *tokens,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tokens)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *handler) loginUser(w http.ResponseWriter, r *http.Request) {
@@ -44,14 +56,23 @@ func (h *handler) loginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tokens, err := h.s.login(r.Context(), dto)
+	if errors.Is(err, sql.ErrNoRows) {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Print(err)
 		return
 	}
 
+	response := UserResponseDto{
+		Email:  dto.Email,
+		Tokens: *tokens,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tokens)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *handler) refreshToken(w http.ResponseWriter, r *http.Request) {
