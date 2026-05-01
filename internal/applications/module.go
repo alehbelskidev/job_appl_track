@@ -22,4 +22,5 @@ func (m *Module) Mount(r chi.Router) {
 	r.Post("/applications", m.handler.createApplication)
 	r.Get("/applications", m.handler.getApplications)
 	r.Patch("/applications/{id}/status", m.handler.updateJobApplicationStatus)
+	r.Delete("/applications/{id}", m.handler.deleteApplication)
 }

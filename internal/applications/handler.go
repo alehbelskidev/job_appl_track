@@ -158,6 +158,42 @@ func (h *handler) updateJobApplicationStatus(w http.ResponseWriter, r *http.Requ
 	}
 }
 
+type deleteApplicationResponseDto struct {
+	Data bool `json:"data"`
+}
+
+func (h *handler) deleteApplication(w http.ResponseWriter, r *http.Request) {
+	_, err := h.getUserIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		log.Print(err)
+		return
+	}
+
+	err = h.q.DeleteJobApplication(r.Context(), id)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Print(err)
+		return
+	}
+
+	response := deleteApplicationResponseDto{Data: true}
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Print(err)
+		return
+	}
+}
+
 // func (h *handler) updateApplication(w http.ResponseWriter, r *http.Request) {
 // 	ownerID, err := h.getUserIDFromContext(r.Context())
 // 	if err != nil {
