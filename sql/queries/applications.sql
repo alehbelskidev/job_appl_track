@@ -21,3 +21,11 @@ SET
   notes = $8
 WHERE id=$1 AND owner_id=$2
 RETURNING *;
+
+-- name: UpdateJobApplicationStatus :one
+UPDATE job_applications
+SET
+  status = $3,
+  date_updated = NOW()
+WHERE id=$1 AND owner_id=$2
+RETURNING *;

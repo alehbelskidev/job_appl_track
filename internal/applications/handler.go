@@ -117,7 +117,7 @@ func (h *handler) getApplications(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) updateApplication(w http.ResponseWriter, r *http.Request) {
+func (h *handler) updateJobApplicationStatus(w http.ResponseWriter, r *http.Request) {
 	ownerID, err := h.getUserIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
@@ -131,8 +131,7 @@ func (h *handler) updateApplication(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 		return
 	}
-
-	payload := repo.UpdateJobApplicationParams{}
+	payload := repo.UpdateJobApplicationStatusParams{}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		log.Print(err)
@@ -142,18 +141,61 @@ func (h *handler) updateApplication(w http.ResponseWriter, r *http.Request) {
 	payload.ID = id
 	payload.OwnerID = *ownerID
 
-	app, err := h.q.UpdateJobApplication(r.Context(), payload)
+	app, err := h.q.UpdateJobApplicationStatus(r.Context(), payload)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Print(err)
 		return
 	}
 
+	response := createApplicationResponseDto{Data: app}
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(app)
+	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Print(err)
 		return
 	}
 }
+
+// func (h *handler) updateApplication(w http.ResponseWriter, r *http.Request) {
+// 	ownerID, err := h.getUserIDFromContext(r.Context())
+// 	if err != nil {
+// 		http.Error(w, "unauthorized", http.StatusUnauthorized)
+// 		return
+// 	}
+//
+// 	idStr := chi.URLParam(r, "id")
+// 	id, err := uuid.Parse(idStr)
+// 	if err != nil {
+// 		http.Error(w, "invalid id", http.StatusBadRequest)
+// 		log.Print(err)
+// 		return
+// 	}
+//
+// 	payload := repo.UpdateJobApplicationParams{}
+// 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+// 		http.Error(w, "bad request", http.StatusBadRequest)
+// 		log.Print(err)
+// 		return
+// 	}
+//
+// 	payload.ID = id
+// 	payload.OwnerID = *ownerID
+//
+// 	app, err := h.q.UpdateJobApplication(r.Context(), payload)
+// 	if err != nil {
+// 		http.Error(w, "Internal server error", http.StatusInternalServerError)
+// 		log.Print(err)
+// 		return
+// 	}
+//
+// 	response := createApplicationResponseDto{Data: app}
+// 	w.Header().Set("Content-Type", "application/json")
+// 	err = json.NewEncoder(w).Encode(response)
+// 	if err != nil {
+// 		http.Error(w, "Internal server error", http.StatusInternalServerError)
+// 		log.Print(err)
+// 		return
+// 	}
+// }

@@ -19,6 +19,7 @@ type Querier interface {
 	GetRefreshToken(ctx context.Context, token string) (string, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	UpdateJobApplication(ctx context.Context, arg UpdateJobApplicationParams) (JobApplication, error)
+	UpdateJobApplicationStatus(ctx context.Context, arg UpdateJobApplicationStatusParams) (JobApplication, error)
 }
 
 var _ Querier = (*Queries)(nil)

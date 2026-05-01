@@ -156,3 +156,36 @@ func (q *Queries) UpdateJobApplication(ctx context.Context, arg UpdateJobApplica
 	)
 	return i, err
 }
+
+const updateJobApplicationStatus = `-- name: UpdateJobApplicationStatus :one
+UPDATE job_applications
+SET
+  status = $3,
+  date_updated = NOW()
+WHERE id=$1 AND owner_id=$2
+RETURNING id, company, role, date_applied, date_updated, status, owner_id, description, url, notes
+`
+
+type UpdateJobApplicationStatusParams struct {
+	ID      uuid.UUID `json:"id"`
+	OwnerID uuid.UUID `json:"owner_id"`
+	Status  int32     `json:"status"`
+}
+
+func (q *Queries) UpdateJobApplicationStatus(ctx context.Context, arg UpdateJobApplicationStatusParams) (JobApplication, error) {
+	row := q.db.QueryRow(ctx, updateJobApplicationStatus, arg.ID, arg.OwnerID, arg.Status)
+	var i JobApplication
+	err := row.Scan(
+		&i.ID,
+		&i.Company,
+		&i.Role,
+		&i.DateApplied,
+		&i.DateUpdated,
+		&i.Status,
+		&i.OwnerID,
+		&i.Description,
+		&i.Url,
+		&i.Notes,
+	)
+	return i, err
+}
