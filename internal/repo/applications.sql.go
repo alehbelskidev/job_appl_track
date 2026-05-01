@@ -7,34 +7,39 @@ package repo
 
 import (
 	"context"
-	"database/sql"
-	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createJobApplication = `-- name: CreateJobApplication :one
 INSERT INTO job_applications(
-  company, role, date_applied, status, owner_id
-) VALUES($1, $2, $3, $4, $5)
+  company, role, date_applied, status, owner_id, description, url, notes
+) VALUES($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING id, company, role, date_applied, date_updated, status, owner_id, description, url, notes
 `
 
 type CreateJobApplicationParams struct {
-	Company     string    `json:"company"`
-	Role        string    `json:"role"`
-	DateApplied time.Time `json:"date_applied"`
-	Status      int32     `json:"status"`
-	OwnerID     uuid.UUID `json:"owner_id"`
+	Company     string             `json:"company"`
+	Role        string             `json:"role"`
+	DateApplied pgtype.Timestamptz `json:"date_applied"`
+	Status      int32              `json:"status"`
+	OwnerID     uuid.UUID          `json:"owner_id"`
+	Description pgtype.Text        `json:"description"`
+	Url         pgtype.Text        `json:"url"`
+	Notes       pgtype.Text        `json:"notes"`
 }
 
 func (q *Queries) CreateJobApplication(ctx context.Context, arg CreateJobApplicationParams) (JobApplication, error) {
-	row := q.db.QueryRowContext(ctx, createJobApplication,
+	row := q.db.QueryRow(ctx, createJobApplication,
 		arg.Company,
 		arg.Role,
 		arg.DateApplied,
 		arg.Status,
 		arg.OwnerID,
+		arg.Description,
+		arg.Url,
+		arg.Notes,
 	)
 	var i JobApplication
 	err := row.Scan(
@@ -53,22 +58,25 @@ func (q *Queries) CreateJobApplication(ctx context.Context, arg CreateJobApplica
 }
 
 const getJobApplications = `-- name: GetJobApplications :many
-SELECT id, company, role, date_applied, date_updated, status
+SELECT id, company, role, date_applied, date_updated, status, description, url, notes
 FROM job_applications
 WHERE owner_id=$1
 `
 
 type GetJobApplicationsRow struct {
-	ID          uuid.UUID    `json:"id"`
-	Company     string       `json:"company"`
-	Role        string       `json:"role"`
-	DateApplied time.Time    `json:"date_applied"`
-	DateUpdated sql.NullTime `json:"date_updated"`
-	Status      int32        `json:"status"`
+	ID          uuid.UUID          `json:"id"`
+	Company     string             `json:"company"`
+	Role        string             `json:"role"`
+	DateApplied pgtype.Timestamptz `json:"date_applied"`
+	DateUpdated pgtype.Timestamptz `json:"date_updated"`
+	Status      int32              `json:"status"`
+	Description pgtype.Text        `json:"description"`
+	Url         pgtype.Text        `json:"url"`
+	Notes       pgtype.Text        `json:"notes"`
 }
 
 func (q *Queries) GetJobApplications(ctx context.Context, ownerID uuid.UUID) ([]GetJobApplicationsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getJobApplications, ownerID)
+	rows, err := q.db.Query(ctx, getJobApplications, ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -83,13 +91,13 @@ func (q *Queries) GetJobApplications(ctx context.Context, ownerID uuid.UUID) ([]
 			&i.DateApplied,
 			&i.DateUpdated,
 			&i.Status,
+			&i.Description,
+			&i.Url,
+			&i.Notes,
 		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -103,26 +111,35 @@ SET
   company = $3,
   role = $4,
   status = $5,
-  date_updated = NOW()
+  date_updated = NOW(),
+  description = $6,
+  url = $7,
+  notes = $8
 WHERE id=$1 AND owner_id=$2
 RETURNING id, company, role, date_applied, date_updated, status, owner_id, description, url, notes
 `
 
 type UpdateJobApplicationParams struct {
-	ID      uuid.UUID `json:"id"`
-	OwnerID uuid.UUID `json:"owner_id"`
-	Company string    `json:"company"`
-	Role    string    `json:"role"`
-	Status  int32     `json:"status"`
+	ID          uuid.UUID   `json:"id"`
+	OwnerID     uuid.UUID   `json:"owner_id"`
+	Company     string      `json:"company"`
+	Role        string      `json:"role"`
+	Status      int32       `json:"status"`
+	Description pgtype.Text `json:"description"`
+	Url         pgtype.Text `json:"url"`
+	Notes       pgtype.Text `json:"notes"`
 }
 
 func (q *Queries) UpdateJobApplication(ctx context.Context, arg UpdateJobApplicationParams) (JobApplication, error) {
-	row := q.db.QueryRowContext(ctx, updateJobApplication,
+	row := q.db.QueryRow(ctx, updateJobApplication,
 		arg.ID,
 		arg.OwnerID,
 		arg.Company,
 		arg.Role,
 		arg.Status,
+		arg.Description,
+		arg.Url,
+		arg.Notes,
 	)
 	var i JobApplication
 	err := row.Scan(

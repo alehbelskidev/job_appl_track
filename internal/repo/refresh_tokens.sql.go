@@ -14,7 +14,7 @@ INSERT INTO refresh_tokens(token) VALUES($1)
 `
 
 func (q *Queries) AddRefreshToken(ctx context.Context, token string) error {
-	_, err := q.db.ExecContext(ctx, addRefreshToken, token)
+	_, err := q.db.Exec(ctx, addRefreshToken, token)
 	return err
 }
 
@@ -23,7 +23,7 @@ DELETE FROM refresh_tokens WHERE token=$1
 `
 
 func (q *Queries) DeleteRefreshToken(ctx context.Context, token string) error {
-	_, err := q.db.ExecContext(ctx, deleteRefreshToken, token)
+	_, err := q.db.Exec(ctx, deleteRefreshToken, token)
 	return err
 }
 
@@ -32,7 +32,7 @@ SELECT token FROM refresh_tokens WHERE token=$1
 `
 
 func (q *Queries) GetRefreshToken(ctx context.Context, token string) (string, error) {
-	row := q.db.QueryRowContext(ctx, getRefreshToken, token)
+	row := q.db.QueryRow(ctx, getRefreshToken, token)
 	var token_2 string
 	err := row.Scan(&token_2)
 	return token_2, err

@@ -5,23 +5,21 @@
 package repo
 
 import (
-	"database/sql"
-	"time"
-
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type JobApplication struct {
-	ID          uuid.UUID      `json:"id"`
-	Company     string         `json:"company"`
-	Role        string         `json:"role"`
-	DateApplied time.Time      `json:"date_applied"`
-	DateUpdated sql.NullTime   `json:"date_updated"`
-	Status      int32          `json:"status"`
-	OwnerID     uuid.UUID      `json:"owner_id"`
-	Description sql.NullString `json:"description"`
-	Url         sql.NullString `json:"url"`
-	Notes       sql.NullString `json:"notes"`
+	ID          uuid.UUID          `json:"id"`
+	Company     string             `json:"company"`
+	Role        string             `json:"role"`
+	DateApplied pgtype.Timestamptz `json:"date_applied"`
+	DateUpdated pgtype.Timestamptz `json:"date_updated"`
+	Status      int32              `json:"status"`
+	OwnerID     uuid.UUID          `json:"owner_id"`
+	Description pgtype.Text        `json:"description"`
+	Url         pgtype.Text        `json:"url"`
+	Notes       pgtype.Text        `json:"notes"`
 }
 
 type RefreshToken struct {

@@ -12,6 +12,7 @@ import (
 	"github.com/alehbelskidev/job_appl_track/internal/shared"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type handler struct {
@@ -54,13 +55,19 @@ func (h *handler) createApplication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app, err := h.q.CreateJobApplication(r.Context(), repo.CreateJobApplicationParams{
+	log.Printf("dto: %+v", dto)
+	params := repo.CreateJobApplicationParams{
 		Company:     dto.Company,
 		Role:        dto.Role,
-		DateApplied: time.Now(),
+		DateApplied: pgtype.Timestamptz{Time: time.Now(), Valid: true},
 		Status:      int32(applied),
 		OwnerID:     *ownerID,
-	})
+		Description: pgtype.Text{String: dto.Description, Valid: dto.Description != ""},
+		Url:         pgtype.Text{String: dto.Url, Valid: dto.Url != ""},
+		Notes:       pgtype.Text{String: dto.Notes, Valid: dto.Notes != ""},
+	}
+	log.Printf("params: %+v", params)
+	app, err := h.q.CreateJobApplication(r.Context(), params)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Print(err)

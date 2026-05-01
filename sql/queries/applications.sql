@@ -1,12 +1,12 @@
 -- name: GetJobApplications :many
-SELECT id, company, role, date_applied, date_updated, status
+SELECT id, company, role, date_applied, date_updated, status, description, url, notes
 FROM job_applications
 WHERE owner_id=$1;
 
 -- name: CreateJobApplication :one
 INSERT INTO job_applications(
-  company, role, date_applied, status, owner_id
-) VALUES($1, $2, $3, $4, $5)
+  company, role, date_applied, status, owner_id, description, url, notes
+) VALUES($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING *;
 
 -- name: UpdateJobApplication :one
@@ -15,6 +15,9 @@ SET
   company = $3,
   role = $4,
   status = $5,
-  date_updated = NOW()
+  date_updated = NOW(),
+  description = $6,
+  url = $7,
+  notes = $8
 WHERE id=$1 AND owner_id=$2
 RETURNING *;

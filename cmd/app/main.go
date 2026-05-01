@@ -1,7 +1,7 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"log"
 	"net/http"
 
@@ -12,18 +12,20 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
 	config := shared.NewConfig()
-	db, err := sql.Open("pgx", config.DatabaseUrl)
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, config.DatabaseUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer func() { _ = db.Close() }()
+	defer pool.Close()
 
-	q := repo.New(db)
+	q := repo.New(pool)
 	appMod := applications.NewModule(q, config)
 	authMod := auth.NewModule(q, config)
 
