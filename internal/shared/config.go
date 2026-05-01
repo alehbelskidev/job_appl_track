@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -8,8 +9,9 @@ import (
 )
 
 type Config struct {
-	JwtSecret   []byte
-	DatabaseUrl string
+	JwtSecret          []byte
+	DatabaseUrl        string
+	DatabaseUrlMigrate string
 }
 
 func NewConfig() *Config {
@@ -17,8 +19,12 @@ func NewConfig() *Config {
 		log.Print("no .env file, reading from environment")
 	}
 
+	pgUser := []byte(os.Getenv("POSTGRES_USER"))
+	pgPassword := []byte(os.Getenv("POSTGRES_PASSWORD"))
+	pgDB := []byte(os.Getenv("POSTGRES_DB"))
 	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
-	databaseUrl := os.Getenv("DATABASE_URL")
+	databaseUrl := fmt.Sprintf("postgres://%s:%s@postgres:5432/%s?sslmode=disable", pgUser, pgPassword, pgDB)
+	databaseUrlMigrate := fmt.Sprintf("postgres://%s:%s@localhost:5432/%s?sslmode=disable", pgUser, pgPassword, pgDB)
 
-	return &Config{JwtSecret: jwtSecret, DatabaseUrl: databaseUrl}
+	return &Config{JwtSecret: jwtSecret, DatabaseUrl: databaseUrl, DatabaseUrlMigrate: databaseUrlMigrate}
 }
