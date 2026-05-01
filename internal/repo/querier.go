@@ -14,6 +14,7 @@ type Querier interface {
 	AddRefreshToken(ctx context.Context, token string) error
 	CreateJobApplication(ctx context.Context, arg CreateJobApplicationParams) (JobApplication, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteJobApplication(ctx context.Context, id uuid.UUID) error
 	DeleteRefreshToken(ctx context.Context, token string) error
 	GetJobApplications(ctx context.Context, ownerID uuid.UUID) ([]GetJobApplicationsRow, error)
 	GetRefreshToken(ctx context.Context, token string) (string, error)

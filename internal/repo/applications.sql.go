@@ -57,6 +57,16 @@ func (q *Queries) CreateJobApplication(ctx context.Context, arg CreateJobApplica
 	return i, err
 }
 
+const deleteJobApplication = `-- name: DeleteJobApplication :exec
+DELETE FROM job_applications
+WHERE id=$1
+`
+
+func (q *Queries) DeleteJobApplication(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteJobApplication, id)
+	return err
+}
+
 const getJobApplications = `-- name: GetJobApplications :many
 SELECT id, company, role, date_applied, date_updated, status, description, url, notes
 FROM job_applications

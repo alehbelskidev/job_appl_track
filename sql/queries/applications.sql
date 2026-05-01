@@ -29,3 +29,7 @@ SET
   date_updated = NOW()
 WHERE id=$1 AND owner_id=$2
 RETURNING *;
+
+-- name: DeleteJobApplication :exec
+DELETE FROM job_applications
+WHERE id=$1;
