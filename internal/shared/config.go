@@ -36,7 +36,7 @@ func NewConfig() *Config {
 		pgUser, pgPassword, pgHost, pgDB,
 	)
 	databaseUrlMigrate := fmt.Sprintf(
-		"postgres://%s:%s@l%s:5432/%s?sslmode=disable",
+		"postgres://%s:%s@%s:5432/%s?sslmode=disable",
 		pgUser, pgPassword, pgHostMigrate, pgDB,
 	)
 
