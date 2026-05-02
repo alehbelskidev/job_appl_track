@@ -24,12 +24,21 @@ func NewConfig() *Config {
 	allowedOriginsStr := []byte(os.Getenv("ALLOWED_ORIGINS"))
 	allowedOrigins := strings.Split(string(allowedOriginsStr), ",")
 
+	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
 	pgUser := []byte(os.Getenv("POSTGRES_USER"))
 	pgPassword := []byte(os.Getenv("POSTGRES_PASSWORD"))
 	pgDB := []byte(os.Getenv("POSTGRES_DB"))
-	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
-	databaseUrl := fmt.Sprintf("postgres://%s:%s@postgres:5432/%s?sslmode=disable", pgUser, pgPassword, pgDB)
-	databaseUrlMigrate := fmt.Sprintf("postgres://%s:%s@localhost:5432/%s?sslmode=disable", pgUser, pgPassword, pgDB)
+	pgHost := []byte(os.Getenv("POSTGRES_HOST"))
+	pgHostMigrate := []byte(os.Getenv("POSTGRES_HOST_MIGRATE"))
+
+	databaseUrl := fmt.Sprintf(
+		"postgres://%s:%s@%s:5432/%s?sslmode=disable",
+		pgUser, pgPassword, pgHost, pgDB,
+	)
+	databaseUrlMigrate := fmt.Sprintf(
+		"postgres://%s:%s@l%s:5432/%s?sslmode=disable",
+		pgUser, pgPassword, pgHostMigrate, pgDB,
+	)
 
 	return &Config{
 		JwtSecret:          jwtSecret,
