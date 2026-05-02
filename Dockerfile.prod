@@ -17,6 +17,7 @@ WORKDIR /root/
 
 COPY --from=builder /app/server .
 COPY --from=builder /app/migrate .
+COPY --from=builder /app/sql/migrations ./sql/migrations
 
 EXPOSE 3001
 

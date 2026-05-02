@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS refresh_tokens;
+DROP TABLE IF EXISTS job_applications;
+DROP TABLE IF EXISTS users;
+DROP EXTENSION IF EXISTS "uuid-ossp";
