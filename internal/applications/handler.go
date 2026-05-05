@@ -113,7 +113,7 @@ func (h *handler) createApplicationAI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	prompt := fmt.Sprintf(
-		"You're job is to parse given job application into specific format. JOB application CURL bod result: %s. Response in following format `{company: string, role: string, description: string}`. page url: %s. JUST RETURN JSON NOT ```json{}``` RETURN PLAIN JSON STRING",
+		"You're job is to parse given job application into specific format. JOB application CURL bod result: %s. Response in following format `{company: string, role: string, description: string}`. Pls use some html tags in description to structure content. page url: %s. JUST RETURN JSON NOT ```json{}``` RETURN PLAIN JSON STRING",
 		*pageBody, dto.Url,
 	)
 
