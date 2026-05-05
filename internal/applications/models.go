@@ -1,16 +1,16 @@
 package applications
 
-type jobApplicationStatus int
+type JobApplicationStatus int
 
 const (
-	applied jobApplicationStatus = iota
-	ghosted
-	rejected
-	connected
-	failedInterview
+	Applied JobApplicationStatus = iota
+	Ghosted
+	Rejected
+	Connected
+	FailedInterview
 )
 
-type createJobApplicationDto struct {
+type CreateJobApplicationDto struct {
 	Company     string `json:"company"`
 	Role        string `json:"role"`
 	Description string `json:"description"`

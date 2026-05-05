@@ -14,6 +14,7 @@ type Config struct {
 	DatabaseUrl        string
 	DatabaseUrlMigrate string
 	AllowedOrigins     []string
+	OpenAISecret       []byte
 }
 
 func NewConfig() *Config {
@@ -30,6 +31,7 @@ func NewConfig() *Config {
 	pgDB := []byte(os.Getenv("POSTGRES_DB"))
 	pgHost := []byte(os.Getenv("POSTGRES_HOST"))
 	pgHostMigrate := []byte(os.Getenv("POSTGRES_HOST_MIGRATE"))
+	openAISecret := []byte(os.Getenv("OPENAI_SECRET"))
 
 	databaseUrl := fmt.Sprintf(
 		"postgres://%s:%s@%s:5432/%s?sslmode=disable",
@@ -45,5 +47,6 @@ func NewConfig() *Config {
 		DatabaseUrl:        databaseUrl,
 		DatabaseUrlMigrate: databaseUrlMigrate,
 		AllowedOrigins:     allowedOrigins,
+		OpenAISecret:       openAISecret,
 	}
 }

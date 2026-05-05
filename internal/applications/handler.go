@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -17,10 +18,11 @@ import (
 
 type handler struct {
 	q repo.Querier
+	s *service
 }
 
-func newHandler(q repo.Querier) *handler {
-	return &handler{q: q}
+func newHandler(q repo.Querier, s *service) *handler {
+	return &handler{q: q, s: s}
 }
 
 func (h *handler) getUserIDFromContext(ctx context.Context) (*uuid.UUID, error) {
@@ -47,7 +49,7 @@ func (h *handler) createApplication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var dto createJobApplicationDto
+	var dto CreateJobApplicationDto
 
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -60,7 +62,7 @@ func (h *handler) createApplication(w http.ResponseWriter, r *http.Request) {
 		Company:     dto.Company,
 		Role:        dto.Role,
 		DateApplied: pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		Status:      int32(applied),
+		Status:      int32(Applied),
 		OwnerID:     *ownerID,
 		Description: pgtype.Text{String: dto.Description, Valid: dto.Description != ""},
 		Url:         pgtype.Text{String: dto.Url, Valid: dto.Url != ""},
@@ -75,6 +77,53 @@ func (h *handler) createApplication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := createApplicationResponseDto{Data: app}
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Print(err)
+		return
+	}
+}
+
+type createApplicationAIDto struct {
+	Url   string `json:"url"`
+	Notes string `json:"notes"`
+}
+
+func (h *handler) createApplicationAI(w http.ResponseWriter, r *http.Request) {
+	ownerID, err := h.getUserIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var dto createApplicationAIDto
+
+	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		log.Print(err)
+		return
+	}
+
+	pageBody, err := h.s.parseHtmlPage(dto.Url)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	prompt := fmt.Sprintf(
+		"You're job is to parse given job application into specific format. JOB application CURL bod result: %s. Response in following format `{company: string, role: string, description: string}`. page url: %s. JUST RETURN JSON NOT ```json{}``` RETURN PLAIN JSON STRING",
+		*pageBody, dto.Url,
+	)
+
+	app, err := h.s.createApplicationFromPrompt(*ownerID, r.Context(), prompt, dto.Notes, dto.Url)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	response := createApplicationResponseDto{Data: *app}
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
