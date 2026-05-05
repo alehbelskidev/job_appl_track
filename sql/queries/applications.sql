@@ -9,6 +9,12 @@ INSERT INTO job_applications(
 ) VALUES($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING *;
 
+-- name: ImportJobApplications :batchone
+INSERT INTO job_applications(
+  company, role, date_applied, status, owner_id, description, url, notes
+) VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING *;
+
 -- name: UpdateJobApplication :one
 UPDATE job_applications
 SET

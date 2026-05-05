@@ -38,10 +38,6 @@ func (h *handler) getUserIDFromContext(ctx context.Context) (*uuid.UUID, error) 
 	return &ownerID, nil
 }
 
-type createApplicationResponseDto struct {
-	Data repo.JobApplication `json:"data"`
-}
-
 func (h *handler) createApplication(w http.ResponseWriter, r *http.Request) {
 	ownerID, err := h.getUserIDFromContext(r.Context())
 	if err != nil {
@@ -49,7 +45,7 @@ func (h *handler) createApplication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var dto CreateJobApplicationDto
+	var dto createJobApplicationDto
 
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -62,7 +58,7 @@ func (h *handler) createApplication(w http.ResponseWriter, r *http.Request) {
 		Company:     dto.Company,
 		Role:        dto.Role,
 		DateApplied: pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		Status:      int32(Applied),
+		Status:      int32(applied),
 		OwnerID:     *ownerID,
 		Description: pgtype.Text{String: dto.Description, Valid: dto.Description != ""},
 		Url:         pgtype.Text{String: dto.Url, Valid: dto.Url != ""},
@@ -86,9 +82,54 @@ func (h *handler) createApplication(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type createApplicationAIDto struct {
-	Url   string `json:"url"`
-	Notes string `json:"notes"`
+func (h *handler) importJobApplications(w http.ResponseWriter, r *http.Request) {
+	ownerID, err := h.getUserIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var dtos []importJobApplicationsDto
+	if err := json.NewDecoder(r.Body).Decode(&dtos); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+
+	params := make([]repo.ImportJobApplicationsParams, len(dtos))
+	for i, d := range dtos {
+		params[i] = repo.ImportJobApplicationsParams{
+			Company:     d.Company,
+			Role:        d.Role,
+			DateApplied: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+			Status:      int32(d.Status),
+			OwnerID:     *ownerID,
+			Description: pgtype.Text{String: d.Description, Valid: d.Description != ""},
+			Url:         pgtype.Text{String: d.Url, Valid: d.Url != ""},
+			Notes:       pgtype.Text{String: d.Notes, Valid: d.Notes != ""},
+		}
+	}
+
+	batchResults := h.q.ImportJobApplications(r.Context(), params)
+
+	var savedApps []repo.JobApplication
+	var batchErr error
+
+	batchResults.QueryRow(func(i int, app repo.JobApplication, err error) {
+		if err != nil {
+			batchErr = err
+			return
+		}
+		savedApps = append(savedApps, app)
+	})
+
+	if batchErr != nil {
+		log.Printf("Batch execution error: %v", batchErr)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(importApplicationsResultDto{Data: savedApps})
 }
 
 func (h *handler) createApplicationAI(w http.ResponseWriter, r *http.Request) {
@@ -131,10 +172,6 @@ func (h *handler) createApplicationAI(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 		return
 	}
-}
-
-type getJobApplicationsResponseDto struct {
-	Data []repo.GetJobApplicationsRow `json:"data"`
 }
 
 func (h *handler) getApplications(w http.ResponseWriter, r *http.Request) {
@@ -205,10 +242,6 @@ func (h *handler) updateJobApplicationStatus(w http.ResponseWriter, r *http.Requ
 		log.Print(err)
 		return
 	}
-}
-
-type deleteApplicationResponseDto struct {
-	Data bool `json:"data"`
 }
 
 func (h *handler) deleteApplication(w http.ResponseWriter, r *http.Request) {

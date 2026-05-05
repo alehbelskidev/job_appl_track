@@ -69,7 +69,7 @@ func (s *service) createApplicationFromPrompt(
 
 	createAppDto := repo.CreateJobApplicationParams{
 		DateApplied: pgtype.Timestamptz{Time: time.Now(), Valid: true},
-		Status:      int32(Applied),
+		Status:      int32(applied),
 		OwnerID:     ownerID,
 		Company:     resp.Company,
 		Role:        resp.Role,

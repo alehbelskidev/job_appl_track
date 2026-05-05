@@ -23,6 +23,7 @@ func NewModule(q repo.Querier, config *shared.Config) *Module {
 func (m *Module) Mount(r chi.Router) {
 	r.Post("/applications", m.handler.createApplication)
 	r.Post("/applications/ai", m.handler.createApplicationAI)
+	r.Post("/applications/import", m.handler.importJobApplications)
 	r.Get("/applications", m.handler.getApplications)
 	r.Patch("/applications/{id}/status", m.handler.updateJobApplicationStatus)
 	r.Delete("/applications/{id}", m.handler.deleteApplication)
