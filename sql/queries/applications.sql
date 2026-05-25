@@ -39,3 +39,11 @@ RETURNING *;
 -- name: DeleteJobApplication :exec
 DELETE FROM job_applications
 WHERE id=$1;
+
+-- name: CleanupGhostedApplicatrions :exec
+UPDATE job_applications
+SET
+  status = 1,
+  date_updated = NOW()
+WHERE date_updated < NOW() - interval '1 week'
+OR date_updated IS NULL;

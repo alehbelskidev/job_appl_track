@@ -12,6 +12,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const cleanupGhostedApplicatrions = `-- name: CleanupGhostedApplicatrions :exec
+UPDATE job_applications
+SET
+  status = 1
+WHERE date_updated < NOW() - interval '1 week'
+OR date_updated IS NULL
+`
+
+func (q *Queries) CleanupGhostedApplicatrions(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, cleanupGhostedApplicatrions)
+	return err
+}
+
 const createJobApplication = `-- name: CreateJobApplication :one
 INSERT INTO job_applications(
   company, role, date_applied, status, owner_id, description, url, notes

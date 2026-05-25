@@ -7,6 +7,7 @@ import (
 
 	"github.com/alehbelskidev/job_appl_track/internal/applications"
 	"github.com/alehbelskidev/job_appl_track/internal/auth"
+	"github.com/alehbelskidev/job_appl_track/internal/cleanup"
 	"github.com/alehbelskidev/job_appl_track/internal/repo"
 	"github.com/alehbelskidev/job_appl_track/internal/shared"
 	"github.com/go-chi/chi/v5"
@@ -45,6 +46,8 @@ func main() {
 		r.Use(shared.AuthMiddleware(config.JwtSecret))
 		appMod.Mount(r)
 	})
+
+	cleanup.RunCleanup(q)
 
 	err = http.ListenAndServe(":3001", r)
 	if err != nil {

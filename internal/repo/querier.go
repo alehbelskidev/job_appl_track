@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	AddRefreshToken(ctx context.Context, token string) error
+	CleanupGhostedApplicatrions(ctx context.Context) error
 	CreateJobApplication(ctx context.Context, arg CreateJobApplicationParams) (JobApplication, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteJobApplication(ctx context.Context, id uuid.UUID) error
