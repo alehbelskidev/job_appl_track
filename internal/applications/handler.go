@@ -135,21 +135,23 @@ func (h *handler) importJobApplications(w http.ResponseWriter, r *http.Request) 
 func (h *handler) createApplicationAI(w http.ResponseWriter, r *http.Request) {
 	ownerID, err := h.getUserIDFromContext(r.Context())
 	if err != nil {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		log.Printf("createApplicationAI :: Error parsing ownerID. [[%s]]", err)
 		return
 	}
 
 	var dto createApplicationAIDto
 
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		log.Print(err)
+		http.Error(w, "Cannot decode request body.", http.StatusBadRequest)
+		log.Printf("createApplicationAI :: Error decoding body. [[%s]]", err)
 		return
 	}
 
 	pageBody, err := h.s.parseHtmlPage(dto.Url)
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, "Cannot parse given url, try adding manually.", http.StatusInternalServerError)
+		log.Printf("createApplicationAI :: Error parsing url. [[%s]]", err)
 		return
 	}
 
@@ -160,7 +162,8 @@ func (h *handler) createApplicationAI(w http.ResponseWriter, r *http.Request) {
 
 	app, err := h.s.createApplicationFromPrompt(*ownerID, r.Context(), prompt, dto.Notes, dto.Url)
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, "Cannot create job application from AI prompt", http.StatusInternalServerError)
+		log.Printf("createApplicationAI :: Error returned from service. [[%s]]", err)
 		return
 	}
 
@@ -168,8 +171,8 @@ func (h *handler) createApplicationAI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		log.Print(err)
+		http.Error(w, "Cannot encode give application for client", http.StatusInternalServerError)
+		log.Printf("createApplicationAI :: Create application error. [[%s]]", err)
 		return
 	}
 }

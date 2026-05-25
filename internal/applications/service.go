@@ -32,7 +32,7 @@ func newService(c *shared.Config, repo repo.Querier) *service {
 }
 
 func (s *service) parseHtmlPage(url string) (*string, error) {
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Get(url)
 	if err != nil {
 		return nil, err
