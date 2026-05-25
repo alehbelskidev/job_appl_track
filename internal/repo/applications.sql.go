@@ -15,9 +15,13 @@ import (
 const cleanupGhostedApplicatrions = `-- name: CleanupGhostedApplicatrions :exec
 UPDATE job_applications
 SET
-  status = 1
-WHERE date_updated < NOW() - interval '1 week'
-OR date_updated IS NULL
+  status = 1,
+  date_updated = NOW()
+WHERE (
+  date_updated < NOW() - interval '1 week'
+  OR date_updated IS NULL
+)
+AND status != 1
 `
 
 func (q *Queries) CleanupGhostedApplicatrions(ctx context.Context) error {
